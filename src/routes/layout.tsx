@@ -36,15 +36,22 @@ const [queryClient] = useState(() => new QueryClient());
              </StyledLink>
            </li>
      
+           <li>
+             {/* <StyledLink /> is like <Link /> but it can be styled based on the current route ()which is useful for navigation links). */}
+             <StyledLink href="/posts" activeClass="text-accent">
+               Posts
+             </StyledLink>
+           </li>
+     
          </ul>
        </nav>
      </header>
-
+{/* 
      <trpc.Provider client={trpcClient()} queryClient={queryClient}>
-       <QueryClientProvider client={queryClient}>
+       <QueryClientProvider client={queryClient}> */}
          <section className="min-h-screen h-full w-full  ">{children}</section>
-       </QueryClientProvider>
-     </trpc.Provider>
+       {/* </QueryClientProvider>
+     </trpc.Provider> */}
 
      <ToastContainer
        position="bottom-right"

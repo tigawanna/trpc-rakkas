@@ -1,5 +1,6 @@
 import { createTRPCRouter, publicProcedure } from '../trpc';
 import { helloRouter } from './hello';
+import { postRouter } from './posts';
 
 
 //  to test using a REST API client use a . to access nested routes insteda of a slash
@@ -8,6 +9,7 @@ import { helloRouter } from './hello';
 
 export const appRouter = createTRPCRouter({
   hello:helloRouter,
+  posts:postRouter
 });
 
 // export type definition of API
