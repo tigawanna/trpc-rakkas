@@ -4,10 +4,11 @@ import { RequestContext } from "rakkasjs";
 
 export async function get(ctx: RequestContext) {
 try {
-    return json({ message: "jeffery wasa good boy " },{ status: StatusCodes.ACCEPTED });
+    return json({ message: "welcome to rakkas root api" },{ status: StatusCodes.ACCEPTED });
     } catch (error) {
     return json(error, { status: StatusCodes.BAD_REQUEST });    }
 }
+
 export async function post(ctx: RequestContext) {
     const body = await ctx.request.json();
     try {
