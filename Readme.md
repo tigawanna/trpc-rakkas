@@ -126,7 +126,7 @@ first we'll create the trpc context
 export function createTRPCContext({ req, resHeaders }: FetchCreateContextFnOptions) {
   const user = { name: req.headers.get('username') ?? 'anonymous' };
   // return createInnerTRPCContext({});
-  return { req, resHeaders, user, prisma };
+  return { req, resHeaders, user };
 }
 
 ```
@@ -162,9 +162,6 @@ Then we can now create the trc router+ it's endpoints
 // src/server/routes/root.ts
 import { createTRPCRouter, publicProcedure } from '../trpc';
 import { helloRouter } from './hello';
-import { postRouter } from './posts';
-import { userRouter } from './user';
-
 //  to test using a REST API client use a . to access nested routes insteda of a slash
 //ex: http://localhost:5173/api/trpc/welcome
 //ex: http://localhost:5173/api/trpc/hello.wave
@@ -191,3 +188,131 @@ export const helloRouter = createTRPCRouter({
 
 })
 ```
+With thhat done , our endppoints are ready to consume on the frontend
+
+lets add some frontend dependancies
+
+```sh
+pnpm install @tanstack/react-query react-toastify
+```
+Then we configure the trpc client in  `src/utils/trpc.ts`
+
+```ts
+// src/utils/trpc.ts
+import type { AppRouter } from '@/server/routes/root';
+import { createTRPCReact } from '@trpc/react-query';
+
+
+export const trpc = createTRPCReact<AppRouter>();
+
+```
+Then we creaet a trpc client for the provider
+
+```ts
+// src/utils/client.ts
+import { trpc } from "./trpc";
+import { httpBatchLink } from "@trpc/react-query";
+import superjson from "superjson";
+
+const getBaseUrl = (url?:string) => {
+    if (typeof window !== "undefined") return ""; // browser should use relative url
+    const urlObj = new URL(url as string);
+    if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`; // SSR should use vercel url
+    return urlObj.origin;
+};
+
+
+export const trpcClient = (url?:string)=>{
+   return trpc.createClient({
+        links: [
+            httpBatchLink({
+                url:`${getBaseUrl(url)}/api/trpc`,
+            }),
+        ],
+        transformer: superjson
+    });
+}
+
+```
+
+Then we setup the tanstack react query provider
+
+```tsx
+// src/routes/layout.tsx
+const [queryClient] = useState(() => new QueryClient());
+...
+return(
+       <trpc.Provider client={trpcClient()} queryClient={queryClient}>
+       <QueryClientProvider client={queryClient}>
+         <section className="min-h-screen h-full w-full  ">{children}</section>
+       </QueryClientProvider>
+     </trpc.Provider>
+)
+```
+
+> Rakkasjs has layouts , like the ones in nextjs app router which lets you wrap multiple pages with a commone layout , the one at the root `src/routes/layout.tsx` wraps the whole app so we can put our providers there
+
+Let's add some tailwind for styling too [official guide](https://tailwindcss.com/docs/guides/vite)
+
+
+```sh
+pnpm i -D tailwindcss postcss autoprefixer daisyui  tailwindcss-animate tailwind-scrollbar tailwindcss-elevation prettier-plugin-tailwindcss
+```
+```sh
+npx tailwindcss init -p
+```
+
+Now add the tailwind config content paths
+```ts
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+``` 
+
+
+And include the base css in our layout 
+
+`src/routes/index.css`
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+```tsx
+// src/routes/layout.tsx
+import ./index.css
+
+```
+
+and now we consume our trpc endpoint 
+```tsx
+// src/routes/index.page.tsx
+import { trpc } from "@/utils/trpc";
+
+export default function HomePage() {
+	const query = trpc.hello.hey.useQuery();
+	return (
+		<main className="flex flex-col gap-2 items-center">
+			<h1>Hello world!</h1>
+			<h3>{query?.data}</h3>
+		</main>
+	);
+}
+
+``` 
+Taddah, Your app is now ready 
+
+![Alt text](docs/image.png)
+
+
+
+But you can optimize this futer

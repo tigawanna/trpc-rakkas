@@ -10,7 +10,7 @@ import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 import { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
-import { prisma } from "./db";
+
 
 /**
  * 1. CONTEXT
@@ -34,7 +34,7 @@ type CreateContextOptions = Record<string, never>;
  */
 const createInnerTRPCContext = (_opts: CreateContextOptions) => {
   return {
-    prisma,
+    // prisma,
   };
 };
 
@@ -51,7 +51,7 @@ const createInnerTRPCContext = (_opts: CreateContextOptions) => {
 export function createTRPCContext({ req, resHeaders }: FetchCreateContextFnOptions) {
   const user = { name: req.headers.get('username') ?? 'anonymous' };
   // return createInnerTRPCContext({});
-  return { req, resHeaders, user, prisma };
+  return { req, resHeaders, user };
 }
 
 
